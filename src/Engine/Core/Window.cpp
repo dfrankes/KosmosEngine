@@ -47,6 +47,29 @@ void Window::create(int width, int height, const char *windowTitle)
     {
         Debug::Error("Failed to initialize GLAD");
     }
+
+    // Test render roop
+    while (!glfwWindowShouldClose(m_window))
+    {
+        // input
+        // -----
+        // processInput(window);
+
+        // render
+        // ------
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // render the triangle
+        // ourShader.use();
+        // glBindVertexArray(VAO);
+        // glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+        // -------------------------------------------------------------------------------
+        glfwSwapBuffers(m_window);
+        glfwPollEvents();
+    }
 }
 
 // Return the GLFW Window
@@ -65,6 +88,22 @@ int Window::getWidth()
 int Window::getHeight()
 {
     return m_height;
+}
+
+void Window::update()
+{
+    glfwPollEvents();
+}
+
+void Window::render()
+{
+    glfwSwapBuffers(m_window);
+}
+
+void Window::clear()
+{
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void resizeCallback(GLFWwindow *window, int width, int height)

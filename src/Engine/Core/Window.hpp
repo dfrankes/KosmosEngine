@@ -14,6 +14,9 @@ public:
     static GLFWwindow *getWindow();
     static int getWidth();
     static int getHeight();
+    static void update();
+    static void render();
+    static void clear();
 
 private:
     const char *m_windowTitle;
