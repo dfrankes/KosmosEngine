@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 project(Engine)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}../../../bin")
@@ -16,7 +19,10 @@ list(APPEND SOURCE_FILES
     "${ENGINE_DIR}/Helpers/Debug.cpp"
     "${ENGINE_DIR}/Helpers/Debug.h"
 
-    "${ENGINE_DIR}/shader_s.h"
+    "${ENGINE_DIR}/Core/Window.cpp"
+    "${ENGINE_DIR}/Core/Window.hpp"
+
+    "${ENGINE_DIR}/Helpers/shader_s.h"
 )
 
 add_library(Engine SHARED ${SOURCE_FILES})
