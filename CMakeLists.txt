@@ -9,6 +9,7 @@ enable_testing()
 
 include(CPack)
 include(FetchContent)
+set(FETCHCONTENT_BASE_DIR ${PROJECT_SOURCE_DIR}/dependencies CACHE PATH "Missing description." FORCE)
 
 set(SOURCE_DIR "${PROJECT_SOURCE_DIR}/src")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}../bin")
@@ -18,33 +19,19 @@ set(LIB_DIR "${PROJECT_SOURCE_DIR}/dependencies")
 set(INCLUDES_DIR_PUBLIC "${PROJECT_SOURCE_DIR}/includes")
 set(INCLUDES_DIR_PRIVATE "${PROJECT_SOURCE_DIR}/src")
 
-set(ENGINE_DIR "${PROJECT_SOURCE_DIR}/src/Engine")
-
-list(APPEND SOURCE_FILES
-    "${ENGINE_DIR}/Kosmos.cpp"
-    "${ENGINE_DIR}/Kosmos.hpp"
-
-    "${ENGINE_DIR}/Helpers/Debug.cpp"
-    "${ENGINE_DIR}/Helpers/Debug.h"
-
-    "${ENGINE_DIR}/Core/Window.cpp"
-    "${ENGINE_DIR}/Core/Window.hpp"
-
-    "${ENGINE_DIR}/Helpers/shader_s.h"
-
-    "${PROJECT_SOURCE_DIR}/src/Game.cpp"
-)
-
+aux_source_directory(${SOURCE_DIR} SUB_SOURCES)
+FILE(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.hpp")
 add_executable(Game ${SOURCE_FILES})
 
-# add_library(Engine SHARED ${SOURCE_FILES})
 set_target_properties(Game PROPERTIES LINKER_LANGUAGE CXX)
 
-# Copy everything from res into the output folder (hardcoded debug folder for now)
-message("${PROJECT_SOURCE_DIR}/res -> ${PROJECT_BINARY_DIR}/bin/Debug")
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+add_custom_target(copy_resources ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${PROJECT_SOURCE_DIR}/res $<TARGET_FILE_DIR:${PROJECT_NAME}>/${PROJECT_NAME})
+    ${PROJECT_SOURCE_DIR}/src/resources
+    ${PROJECT_SOURCE_DIR}/bin/Debug/resources
+    COMMENT "Copying resources into binary directory")
+
+add_dependencies(Game copy_resources)
 
 # GLFW
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -61,8 +48,8 @@ target_link_libraries(${PROJECT_NAME} OpenGL::GL)
 # glad
 set(GLAD_DIR "${LIB_DIR}/glad")
 add_library("glad" "${GLAD_DIR}/src/glad.c")
-target_include_directories("glad" PRIVATE "${GLAD_DIR}/include")
-target_include_directories(${PROJECT_NAME} PRIVATE "${GLAD_DIR}/include")
+target_include_directories("glad" PUBLIC "${GLAD_DIR}/include")
+target_include_directories(${PROJECT_NAME} PUBLIC "${GLAD_DIR}/include")
 target_link_libraries(${PROJECT_NAME} "glad" "${CMAKE_DL_LIBS}")
 
 # json parser
@@ -77,7 +64,19 @@ if(NOT json_POPULATED)
     add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-target_link_libraries(${PROJECT_NAME} nlohmann_json::nlohmann_json)
+# assimp
+FetchContent_Declare(assimp
+    GIT_REPOSITORY https://github.com/assimp/assimp.git
+    GIT_TAG master)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(assimp)
 
-add_subdirectory(${LIB_DIR}/glm EXCLUDE_FROM_ALL)
-target_link_libraries(${PROJECT_NAME} glm)
+set(BUILD_SHARED_LIBS ON)
+
+# find_package(assimp CONFIG REQUIRED)
+target_include_directories(${PROJECT_NAME} PRIVATE dependencies/assimp-src/include)
+target_link_libraries(${PROJECT_NAME} nlohmann_json::nlohmann_json glm assimp)
+add_subdirectory(${LIB_DIR}/glm)
